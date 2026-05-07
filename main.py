@@ -1,10 +1,13 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
 
 app = FastAPI()
 
-# abilita richieste dal frontend
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -12,23 +15,35 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# "database" temporaneo
+# cartelle frontend
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
+# database temporaneo
 db = []
 
-# struttura dati
+# modello dati
 class SensorData(BaseModel):
     temperature: float
     humidity: float
     weight: float
     timestamp: float
 
-# riceve dati dal simulatore / sensore
+# homepage
+@app.get("/", response_class=HTMLResponse)
+def home(request: Request):
+    return templates.TemplateResponse(
+        "index.html",
+        {"request": request}
+    )
+
+# riceve dati
 @app.post("/data")
 def receive_data(data: SensorData):
     db.append(data.dict())
     return {"status": "ok"}
 
-# manda dati al frontend
+# manda dati
 @app.get("/data")
 def get_data():
-    return db[-50:]  # ultimi 50 dati
+    return db[-50:]
