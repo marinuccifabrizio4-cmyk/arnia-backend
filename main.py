@@ -32,10 +32,7 @@ class SensorData(BaseModel):
 # homepage
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
-    return templates.TemplateResponse(
-        "index.html",
-        {"request": request}
-    )
+    return HTMLResponse("<h1>OK FUNZIONA</h1>")
 
 # riceve dati
 @app.post("/data")
