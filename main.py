@@ -1,4 +1,5 @@
-from fastapi import FastAPI, BaseModel
+from fastapi import FastAPI
+from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
