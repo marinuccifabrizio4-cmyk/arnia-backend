@@ -1,9 +1,8 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
-from pydantic import BaseModel
+import os
 
 app = FastAPI()
 
@@ -15,11 +14,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# cartelle frontend
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
-
-# database temporaneo
+# DB
 db = []
 
 # modello dati
@@ -29,20 +24,27 @@ class SensorData(BaseModel):
     weight: float
     timestamp: float
 
-# homepage
-@app.get("/", response_class=HTMLResponse)
-def home(request: Request):
-    return templates.TemplateResponse(
-        "index.html",
-        {"request": request}
-    )
-# riceve dati
+# POST dati
 @app.post("/data")
 def receive_data(data: SensorData):
     db.append(data.dict())
     return {"status": "ok"}
 
-# manda dati
+# GET dati
 @app.get("/data")
 def get_data():
     return db[-50:]
+
+# 👇 SERVE HTML DA templates SENZA JINJA
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+@app.get("/")
+def home():
+    return FileResponse(os.path.join(BASE_DIR, "templates", "index.html"))
+
+# static files
+app.mount(
+    "/static",
+    StaticFiles(directory=os.path.join(BASE_DIR, "static")),
+    name="static"
+)
